@@ -54,6 +54,7 @@
   #toast.show{opacity:1}
   .pick{display:flex;gap:8px;align-items:center}
   .pick .field{flex:1}
+  .newbox{border:1px dashed var(--gold);background:#FBF7EE;border-radius:12px;padding:4px 12px 12px;margin-top:8px}
   label.sub{margin-top:0;font-weight:500}
   .qinfo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
   .qinfo div{background:#FBF7EE;border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
@@ -102,9 +103,16 @@
         <div><label for="fDate">Fecha</label><input class="field" type="date" id="fDate"></div>
         <div><label for="fWeather">Clima</label><select class="field" id="fWeather"></select></div>
       </div>
-      <label for="fFind">Rubro</label>
-      <input class="field" id="fFind" type="search" placeholder="Buscar rubro por nombre o código" style="margin-bottom:6px">
+      <label for="fItem">Rubro</label>
       <select class="field" id="fItem"></select>
+      <div class="newbox hidden" id="fNewBox">
+        <label for="fNewName">Rubro adicional (fuera del contrato)</label>
+        <input class="field" id="fNewName" placeholder="Ej.: Picado de piso para nueva tubería">
+        <label for="fNewUnit">Unidad</label>
+        <input class="field" id="fNewUnit" list="units" placeholder="m2, ml, m3, und, gbl…">
+        <datalist id="units"><option value="m2"><option value="ml"><option value="m3"><option value="und"><option value="gbl"><option value="kg"><option value="pto"></datalist>
+        <div class="actions"><button class="btn primary" id="bNewAdd">Agregar rubro</button><button class="btn" id="bNewCancel">Cancelar</button></div>
+      </div>
       <div class="qinfo hidden" id="fInfo"></div>
       <label for="fQty">Cantidad avanzada <span id="fUnit"></span></label><input class="field" type="number" inputmode="decimal" step="any" min="0" id="fQty">
       <label>Personal en obra por clasificación <span id="fCrewTot"></span></label>
@@ -171,7 +179,7 @@
   function toast(msg){ const el = $('#toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2800); }
 
   // ---------- estado ----------
-  let st = {pack: null, author: '', entries: []};
+  let st = {pack: null, author: '', entries: [], extras: []};
   try { const raw = localStorage.getItem(STORE); if (raw) st = Object.assign(st, JSON.parse(raw)); } catch (_) {}
   const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(st)); } catch (e) { toast('No se pudo guardar en este navegador.'); } };
   let editing = null, pendingFiles = [];
@@ -205,16 +213,33 @@
   }
 
   // ---------- formulario ----------
-  function fillItems(filter){
-    const f = norm(filter), sel = $('#fItem'), cur = sel.value;
-    const words = f.split(/\s+/).filter(Boolean).map(w => w.length > 4 ? w.replace(/(es|s)$/, '') : w);
-    const items = (st.pack?.items || []).filter(i => { const t = norm(i.code + ' ' + i.rubro); return words.every(w => t.includes(w)); });
-    // primero los rubros cuyo nombre empieza con lo buscado
-    if (words.length){ const pos = i => { const k = norm(i.rubro).indexOf(words[0]); return k < 0 ? 1e6 : k; }; items.sort((x, y) => pos(x) - pos(y)); }
-    sel.innerHTML = (f && !items.length ? `<option value="">— Ningún rubro coincide con «${esc(filter)}» —</option>` : `<option value="">— Registro general (sin rubro) —</option>`) + items.map(i => `<option value="${esc(i.id)}">${esc((i.code ? i.code + ' · ' : '') + i.rubro)}</option>`).join('');
-    // al buscar se elige la primera coincidencia; si no, se guardaba como registro general sin querer
-    if (cur && items.some(i => i.id === cur)) sel.value = cur; else sel.value = f && items.length ? items[0].id : '';
+  const NEW = '__nuevo';
+  // rubros del paquete + adicionales creados en este celular para la obra cargada
+  const extrasOf = () => (st.extras || []).filter(x => st.pack && x.projectId === st.pack.project.id);
+  const allItems = () => (st.pack?.items || []).concat(extrasOf());
+  const itemLabel = i => i.extra ? 'Adicional · ' + i.rubro : (i.code ? i.code + ' · ' : '') + i.rubro;
+  function fillItems(){
+    const sel = $('#fItem'), cur = sel.value, ex = extrasOf();
+    sel.innerHTML = `<option value="">— Seleccione el rubro —</option>`
+      + (st.pack?.items || []).map(i => `<option value="${esc(i.id)}">${esc(itemLabel(i))}</option>`).join('')
+      + (ex.length ? `<optgroup label="Rubros adicionales">${ex.map(i => `<option value="${esc(i.id)}">${esc(itemLabel(i))}</option>`).join('')}</optgroup>` : '')
+      + `<option value="${NEW}">＋ Agregar rubro adicional…</option>`;
+    sel.value = cur && allItems().some(i => i.id === cur) ? cur : '';
+    $('#fNewBox').classList.add('hidden');
     updUnit();
+  }
+  function itemChanged(){
+    if ($('#fItem').value === NEW){ $('#fNewName').value = ''; $('#fNewUnit').value = ''; $('#fNewBox').classList.remove('hidden'); $('#fInfo').classList.add('hidden'); $('#fUnit').textContent = ''; $('#fNewName').focus(); return; }
+    $('#fNewBox').classList.add('hidden'); updUnit();
+  }
+  function addExtra(){
+    const rubro = $('#fNewName').value.trim(), unit = $('#fNewUnit').value.trim();
+    if (!rubro){ toast('Escriba el nombre del rubro adicional.'); $('#fNewName').focus(); return; }
+    const dup = extrasOf().find(x => norm(x.rubro) === norm(rubro));
+    const x = dup || {id: uid('X-'), projectId: st.pack.project.id, rubro, unit, extra: true};
+    if (!dup){ (st.extras = st.extras || []).push(x); persist(); }
+    fillItems(); $('#fItem').value = x.id; updUnit();
+    toast(dup ? 'Ese rubro adicional ya existía: quedó elegido.' : 'Rubro adicional agregado.');
   }
   // personal: maestros y oficiales por separado; crew es el total que lee la oficina
   function crewData(){ const m = Math.max(0, Math.round(num($('#fMaestros').value))), o = Math.max(0, Math.round(num($('#fOficiales').value))); return {maestros: m, oficiales: o, crew: m + o}; }
@@ -223,12 +248,13 @@
     ? [e.maestros ? e.maestros + (e.maestros === 1 ? ' maestro' : ' maestros') : '', e.oficiales ? e.oficiales + (e.oficiales === 1 ? ' oficial' : ' oficiales') : ''].filter(Boolean).join(', ')
     : (e.crew ? e.crew + ' personas' : '');
   function updUnit(){
-    const i = (st.pack?.items || []).find(x => x.id === $('#fItem').value), box = $('#fInfo');
+    const i = allItems().find(x => x.id === $('#fItem').value), box = $('#fInfo');
     $('#fUnit').textContent = i && i.unit ? '(' + i.unit + ')' : '';
     if (!i){ box.classList.add('hidden'); return; }
     // avance ya registrado en este celular (enviado o no), sin contar el registro que se está editando
     const done = st.entries.filter(e => e.projectId === st.pack.project.id && e.itemId === i.id && (!editing || e.id !== editing.id)).reduce((a, e) => a + num(e.qty), 0);
     const now = num($('#fQty').value), u = i.unit ? ' ' + esc(i.unit) : '', f2 = n => (Math.round(n * 100) / 100).toLocaleString('es-EC');
+    if (i.extra){ box.innerHTML = `<div><small>Avanzado</small><b>${f2(done)}${u}</b></div><div class="msg" style="grid-column:2/-1">Rubro adicional, fuera del contrato. La oficina lo revisará y le pondrá precio.</div>`; box.classList.remove('hidden'); return; }
     if (i.qty == null){ box.innerHTML = `<div><small>Avanzado</small><b>${f2(done)}${u}</b></div><div class="msg" style="grid-column:2/-1">La cantidad contratada no viene en este paquete: pida a la oficina uno nuevo.</div>`; box.classList.remove('hidden'); return; }
     const left = i.qty - done - now, over = left < 0;
     box.innerHTML = `<div><small>Contratado</small><b>${f2(i.qty)}${u}</b></div><div><small>Avanzado</small><b>${f2(done)}${u}</b></div><div class="${over ? 'over' : ''}"><small>${now ? 'Falta con este registro' : 'Falta'}</small><b>${f2(left)}${u}</b></div>`
@@ -237,20 +263,21 @@
   }
   function resetForm(){
     editing = null; pendingFiles = [];
-    $('#fDate').value = todayISO(); $('#fWeather').value = 'Soleado'; $('#fFind').value = ''; fillItems('');
+    $('#fDate').value = todayISO(); $('#fWeather').value = 'Soleado'; fillItems();
     $('#fItem').value = ''; $('#fQty').value = ''; $('#fMaestros').value = ''; $('#fOficiales').value = ''; updCrew(); $('#fNote').value = ''; $('#fPhotos').value = ''; $('#fThumbs').innerHTML = '';
     $('#fTitle').textContent = 'Nuevo registro'; $('#bCancel').classList.add('hidden'); updUnit();
   }
   async function editEntry(id){
     const e = st.entries.find(x => x.id === id); if (!e || e.sent) return;
     editing = e; pendingFiles = [];
-    $('#fDate').value = e.date; $('#fWeather').value = e.weather; $('#fFind').value = ''; fillItems(''); $('#fItem').value = e.itemId || '';
+    $('#fDate').value = e.date; $('#fWeather').value = e.weather; fillItems(); $('#fItem').value = e.itemId || '';
     $('#fQty').value = e.qty || ''; if (e.maestros != null || e.oficiales != null){ $('#fMaestros').value = e.maestros || ''; $('#fOficiales').value = e.oficiales || ''; } else { $('#fMaestros').value = ''; $('#fOficiales').value = e.crew || ''; } updCrew(); $('#fNote').value = e.note || ''; $('#fPhotos').value = '';
     $('#fThumbs').innerHTML = (await thumbsHtml(e)); $('#fTitle').textContent = 'Editar registro'; $('#bCancel').classList.remove('hidden'); updUnit();
     window.scrollTo({top: $('#fTitle').offsetTop - 80, behavior: 'smooth'});
   }
   async function saveEntry(){
     if (!st.author.trim()){ toast('Escriba su nombre arriba.'); $('#author').focus(); return; }
+    if ($('#fItem').value === NEW){ toast('Termine de agregar el rubro adicional o elija otro.'); $('#fNewName').focus(); return; }
     const data = {date: $('#fDate').value || todayISO(), itemId: $('#fItem').value, qty: num($('#fQty').value), ...crewData(),
                   weather: $('#fWeather').value, note: $('#fNote').value.trim(), owner: st.author.trim()};
     const files = [...$('#fPhotos').files];
@@ -286,7 +313,8 @@
       for (const e of pend){
         const photos = [];
         for (const ph of e.photos){ const r = await photoGet(ph.id).catch(() => null); if (r) photos.push({id: ph.id, name: r.name, w: r.w, h: r.h, data: r.data}); }
-        entries.push({id: e.id, date: e.date, itemId: e.itemId, qty: e.qty, crew: e.crew, maestros: e.maestros, oficiales: e.oficiales, weather: e.weather, note: e.note, owner: e.owner, createdAt: e.createdAt, photos});
+        const xi = extrasOf().find(x => x.id === e.itemId);
+        entries.push({id: e.id, date: e.date, itemId: e.itemId, ...(xi ? {extra: {rubro: xi.rubro, unit: xi.unit}} : {}), qty: e.qty, crew: e.crew, maestros: e.maestros, oficiales: e.oficiales, weather: e.weather, note: e.note, owner: e.owner, createdAt: e.createdAt, photos});
       }
       const payload = {app: 'Crearquitectura · Libro de obra campo', version: 1, projectId: st.pack.project.id, projectCode: st.pack.project.code,
                        author: st.author, sentAt: new Date().toISOString(), entries};
@@ -322,7 +350,7 @@
     $('#hTitle').textContent = P.name; $('#hSub').textContent = [P.code, P.location].filter(Boolean).join(' · ') || 'Libro de obra';
     $('#author').value = st.author;
     $('#packInfo').textContent = `${P.code ? P.code + ' · ' : ''}${P.name}. ${st.pack.items.length} rubros. Paquete cargado el ${fmtDate(st.pack.loadedAt.slice(0,10))}.`;
-    const byId = new Map(st.pack.items.map(i => [i.id, i]));
+    const byId = new Map(allItems().map(i => [i.id, i]));
     const mine = st.entries.filter(e => e.projectId === P.id).sort((a, b) => (b.date + b.createdAt).localeCompare(a.date + a.createdAt));
     const nPend = mine.filter(e => !e.sent).length;
     $('#bSend').textContent = nPend ? `Enviar a la oficina (${nPend})` : 'Enviar a la oficina';
@@ -330,7 +358,7 @@
     let h = '';
     for (const e of mine.slice(0, 60)){
       const i = byId.get(e.itemId);
-      h += `<div class="entry"><b>${esc(i ? (i.code ? i.code + ' · ' : '') + i.rubro : 'Registro general')}<span class="tag ${e.sent ? 'sent' : 'pend'}">${e.sent ? 'Enviado' : 'Pendiente'}</span></b>
+      h += `<div class="entry"><b>${esc(i ? itemLabel(i) : 'Registro general')}<span class="tag ${e.sent ? 'sent' : 'pend'}">${e.sent ? 'Enviado' : 'Pendiente'}</span></b>
         <small>${esc([fmtDate(e.date), e.qty ? e.qty + ' ' + (i?.unit || '') : '', crewTxt(e), e.weather !== '—' ? e.weather : '', e.owner].filter(Boolean).join(' · '))}</small>
         ${e.note ? `<p>${esc(e.note)}</p>` : ''}<div class="thumbs">${await thumbsHtml(e)}</div>
         ${e.sent ? '' : `<div class="actions"><button class="btn" data-edit="${esc(e.id)}">Editar</button><button class="btn danger" data-del="${esc(e.id)}">Eliminar</button></div>`}</div>`;
@@ -344,8 +372,9 @@
   $('#packFile2').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadPack(f); e.target.value = ''; });
   $('#bNewPack').addEventListener('click', () => $('#packFile2').click());
   $('#author').addEventListener('input', e => { st.author = e.target.value; persist(); });
-  $('#fFind').addEventListener('input', e => fillItems(e.target.value));
-  $('#fItem').addEventListener('change', updUnit);
+    $('#fItem').addEventListener('change', itemChanged);
+  $('#bNewAdd').addEventListener('click', addExtra);
+  $('#bNewCancel').addEventListener('click', () => { $('#fItem').value = ''; itemChanged(); });
   $('#fQty').addEventListener('input', updUnit);
   ['#fMaestros', '#fOficiales'].forEach(id => $(id).addEventListener('input', updCrew));
   $('#fPhotos').addEventListener('change', async e => { const fs = [...e.target.files]; $('#fThumbs').innerHTML = (editing ? await thumbsHtml(editing) : '') + fs.map(f => `<img src="${URL.createObjectURL(f)}" alt="Foto nueva">`).join(''); });
