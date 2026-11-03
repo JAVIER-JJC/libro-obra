@@ -313,8 +313,9 @@
       for (const e of pend){
         const photos = [];
         for (const ph of e.photos){ const r = await photoGet(ph.id).catch(() => null); if (r) photos.push({id: ph.id, name: r.name, w: r.w, h: r.h, data: r.data}); }
-        const xi = extrasOf().find(x => x.id === e.itemId);
-        entries.push({id: e.id, date: e.date, itemId: e.itemId, ...(xi ? {extra: {rubro: xi.rubro, unit: xi.unit}} : {}), qty: e.qty, crew: e.crew, maestros: e.maestros, oficiales: e.oficiales, weather: e.weather, note: e.note, owner: e.owner, createdAt: e.createdAt, photos});
+        const xi = extrasOf().find(x => x.id === e.itemId), pi = (st.pack.items || []).find(x => x.id === e.itemId);
+        // código y nombre del rubro: la oficina lo reconoce aunque su copia de la obra tenga otros identificadores
+        entries.push({id: e.id, date: e.date, itemId: e.itemId, ...(pi ? {code: pi.code, rubro: pi.rubro, unit: pi.unit} : {}), ...(xi ? {extra: {rubro: xi.rubro, unit: xi.unit}} : {}), qty: e.qty, crew: e.crew, maestros: e.maestros, oficiales: e.oficiales, weather: e.weather, note: e.note, owner: e.owner, createdAt: e.createdAt, photos});
       }
       const payload = {app: 'Crearquitectura · Libro de obra campo', version: 1, projectId: st.pack.project.id, projectCode: st.pack.project.code,
                        author: st.author, sentAt: new Date().toISOString(), entries};
