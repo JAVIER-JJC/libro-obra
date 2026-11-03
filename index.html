@@ -107,7 +107,7 @@
       <select class="field" id="fItem"></select>
       <div class="qinfo hidden" id="fInfo"></div>
       <label for="fQty">Cantidad avanzada <span id="fUnit"></span></label><input class="field" type="number" inputmode="decimal" step="any" min="0" id="fQty">
-      <label>Personal en obra <span id="fCrewTot"></span></label>
+      <label>Personal en obra por clasificación <span id="fCrewTot"></span></label>
       <div class="row">
         <div><label for="fMaestros" class="sub">Maestros</label><input class="field" type="number" inputmode="numeric" min="0" step="1" id="fMaestros" placeholder="0"></div>
         <div><label for="fOficiales" class="sub">Oficiales</label><input class="field" type="number" inputmode="numeric" min="0" step="1" id="fOficiales" placeholder="0"></div>
@@ -218,7 +218,7 @@
   }
   // personal: maestros y oficiales por separado; crew es el total que lee la oficina
   function crewData(){ const m = Math.max(0, Math.round(num($('#fMaestros').value))), o = Math.max(0, Math.round(num($('#fOficiales').value))); return {maestros: m, oficiales: o, crew: m + o}; }
-  function updCrew(){ const c = crewData().crew; $('#fCrewTot').textContent = c ? '(total ' + c + ')' : ''; }
+  function updCrew(){ const c = crewData().crew; const d = crewData(); $('#fCrewTot').textContent = c ? `(${d.maestros} maestro${d.maestros === 1 ? '' : 's'} + ${d.oficiales} oficial${d.oficiales === 1 ? '' : 'es'} = ${c})` : ''; }
   const crewTxt = e => e.maestros != null || e.oficiales != null
     ? [e.maestros ? e.maestros + (e.maestros === 1 ? ' maestro' : ' maestros') : '', e.oficiales ? e.oficiales + (e.oficiales === 1 ? ' oficial' : ' oficiales') : ''].filter(Boolean).join(', ')
     : (e.crew ? e.crew + ' personas' : '');
