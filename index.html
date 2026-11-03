@@ -54,6 +54,7 @@
   #toast.show{opacity:1}
   .pick{display:flex;gap:8px;align-items:center}
   .pick .field{flex:1}
+  label.sub{margin-top:0;font-weight:500}
   .qinfo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
   .qinfo div{background:#FBF7EE;border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
   .qinfo small{display:block;font-size:11px;color:var(--steel)}
@@ -105,9 +106,11 @@
       <input class="field" id="fFind" type="search" placeholder="Buscar rubro por nombre o código" style="margin-bottom:6px">
       <select class="field" id="fItem"></select>
       <div class="qinfo hidden" id="fInfo"></div>
+      <label for="fQty">Cantidad avanzada <span id="fUnit"></span></label><input class="field" type="number" inputmode="decimal" step="any" min="0" id="fQty">
+      <label>Personal en obra <span id="fCrewTot"></span></label>
       <div class="row">
-        <div><label for="fQty">Cantidad avanzada <span id="fUnit"></span></label><input class="field" type="number" inputmode="decimal" step="any" min="0" id="fQty"></div>
-        <div><label for="fCrew">Personal en obra</label><input class="field" type="number" inputmode="numeric" min="0" step="1" id="fCrew"></div>
+        <div><label for="fMaestros" class="sub">Maestros</label><input class="field" type="number" inputmode="numeric" min="0" step="1" id="fMaestros" placeholder="0"></div>
+        <div><label for="fOficiales" class="sub">Oficiales</label><input class="field" type="number" inputmode="numeric" min="0" step="1" id="fOficiales" placeholder="0"></div>
       </div>
       <label for="fNote">Qué se hizo hoy</label>
       <textarea class="field" id="fNote" placeholder="Actividad, ubicación, novedades, materiales que faltan, instrucciones recibidas"></textarea>
@@ -213,6 +216,12 @@
     if (cur && items.some(i => i.id === cur)) sel.value = cur; else sel.value = f && items.length ? items[0].id : '';
     updUnit();
   }
+  // personal: maestros y oficiales por separado; crew es el total que lee la oficina
+  function crewData(){ const m = Math.max(0, Math.round(num($('#fMaestros').value))), o = Math.max(0, Math.round(num($('#fOficiales').value))); return {maestros: m, oficiales: o, crew: m + o}; }
+  function updCrew(){ const c = crewData().crew; $('#fCrewTot').textContent = c ? '(total ' + c + ')' : ''; }
+  const crewTxt = e => e.maestros != null || e.oficiales != null
+    ? [e.maestros ? e.maestros + (e.maestros === 1 ? ' maestro' : ' maestros') : '', e.oficiales ? e.oficiales + (e.oficiales === 1 ? ' oficial' : ' oficiales') : ''].filter(Boolean).join(', ')
+    : (e.crew ? e.crew + ' personas' : '');
   function updUnit(){
     const i = (st.pack?.items || []).find(x => x.id === $('#fItem').value), box = $('#fInfo');
     $('#fUnit').textContent = i && i.unit ? '(' + i.unit + ')' : '';
@@ -229,20 +238,20 @@
   function resetForm(){
     editing = null; pendingFiles = [];
     $('#fDate').value = todayISO(); $('#fWeather').value = 'Soleado'; $('#fFind').value = ''; fillItems('');
-    $('#fItem').value = ''; $('#fQty').value = ''; $('#fCrew').value = ''; $('#fNote').value = ''; $('#fPhotos').value = ''; $('#fThumbs').innerHTML = '';
+    $('#fItem').value = ''; $('#fQty').value = ''; $('#fMaestros').value = ''; $('#fOficiales').value = ''; updCrew(); $('#fNote').value = ''; $('#fPhotos').value = ''; $('#fThumbs').innerHTML = '';
     $('#fTitle').textContent = 'Nuevo registro'; $('#bCancel').classList.add('hidden'); updUnit();
   }
   async function editEntry(id){
     const e = st.entries.find(x => x.id === id); if (!e || e.sent) return;
     editing = e; pendingFiles = [];
     $('#fDate').value = e.date; $('#fWeather').value = e.weather; $('#fFind').value = ''; fillItems(''); $('#fItem').value = e.itemId || '';
-    $('#fQty').value = e.qty || ''; $('#fCrew').value = e.crew || ''; $('#fNote').value = e.note || ''; $('#fPhotos').value = '';
+    $('#fQty').value = e.qty || ''; if (e.maestros != null || e.oficiales != null){ $('#fMaestros').value = e.maestros || ''; $('#fOficiales').value = e.oficiales || ''; } else { $('#fMaestros').value = ''; $('#fOficiales').value = e.crew || ''; } updCrew(); $('#fNote').value = e.note || ''; $('#fPhotos').value = '';
     $('#fThumbs').innerHTML = (await thumbsHtml(e)); $('#fTitle').textContent = 'Editar registro'; $('#bCancel').classList.remove('hidden'); updUnit();
     window.scrollTo({top: $('#fTitle').offsetTop - 80, behavior: 'smooth'});
   }
   async function saveEntry(){
     if (!st.author.trim()){ toast('Escriba su nombre arriba.'); $('#author').focus(); return; }
-    const data = {date: $('#fDate').value || todayISO(), itemId: $('#fItem').value, qty: num($('#fQty').value), crew: Math.round(num($('#fCrew').value)),
+    const data = {date: $('#fDate').value || todayISO(), itemId: $('#fItem').value, qty: num($('#fQty').value), ...crewData(),
                   weather: $('#fWeather').value, note: $('#fNote').value.trim(), owner: st.author.trim()};
     const files = [...$('#fPhotos').files];
     if (!data.itemId && !data.note && !files.length && !(editing && editing.photos.length)){ toast('Elija un rubro, escriba qué se hizo o agregue fotos.'); return; }
@@ -277,7 +286,7 @@
       for (const e of pend){
         const photos = [];
         for (const ph of e.photos){ const r = await photoGet(ph.id).catch(() => null); if (r) photos.push({id: ph.id, name: r.name, w: r.w, h: r.h, data: r.data}); }
-        entries.push({id: e.id, date: e.date, itemId: e.itemId, qty: e.qty, crew: e.crew, weather: e.weather, note: e.note, owner: e.owner, createdAt: e.createdAt, photos});
+        entries.push({id: e.id, date: e.date, itemId: e.itemId, qty: e.qty, crew: e.crew, maestros: e.maestros, oficiales: e.oficiales, weather: e.weather, note: e.note, owner: e.owner, createdAt: e.createdAt, photos});
       }
       const payload = {app: 'Crearquitectura · Libro de obra campo', version: 1, projectId: st.pack.project.id, projectCode: st.pack.project.code,
                        author: st.author, sentAt: new Date().toISOString(), entries};
@@ -322,7 +331,7 @@
     for (const e of mine.slice(0, 60)){
       const i = byId.get(e.itemId);
       h += `<div class="entry"><b>${esc(i ? (i.code ? i.code + ' · ' : '') + i.rubro : 'Registro general')}<span class="tag ${e.sent ? 'sent' : 'pend'}">${e.sent ? 'Enviado' : 'Pendiente'}</span></b>
-        <small>${esc([fmtDate(e.date), e.qty ? e.qty + ' ' + (i?.unit || '') : '', e.crew ? e.crew + ' personas' : '', e.weather !== '—' ? e.weather : '', e.owner].filter(Boolean).join(' · '))}</small>
+        <small>${esc([fmtDate(e.date), e.qty ? e.qty + ' ' + (i?.unit || '') : '', crewTxt(e), e.weather !== '—' ? e.weather : '', e.owner].filter(Boolean).join(' · '))}</small>
         ${e.note ? `<p>${esc(e.note)}</p>` : ''}<div class="thumbs">${await thumbsHtml(e)}</div>
         ${e.sent ? '' : `<div class="actions"><button class="btn" data-edit="${esc(e.id)}">Editar</button><button class="btn danger" data-del="${esc(e.id)}">Eliminar</button></div>`}</div>`;
     }
@@ -338,6 +347,7 @@
   $('#fFind').addEventListener('input', e => fillItems(e.target.value));
   $('#fItem').addEventListener('change', updUnit);
   $('#fQty').addEventListener('input', updUnit);
+  ['#fMaestros', '#fOficiales'].forEach(id => $(id).addEventListener('input', updCrew));
   $('#fPhotos').addEventListener('change', async e => { const fs = [...e.target.files]; $('#fThumbs').innerHTML = (editing ? await thumbsHtml(editing) : '') + fs.map(f => `<img src="${URL.createObjectURL(f)}" alt="Foto nueva">`).join(''); });
   $('#bSave').addEventListener('click', saveEntry);
   $('#bCancel').addEventListener('click', resetForm);
