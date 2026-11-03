@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A2239">
+<title>Libro de Obra · Campo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0A2239; --gold:#C89B3C; --ink:#1B2430; --steel:#5E6875; --paper:#F5F3EE;
+    --card:#FFFFFF; --line:#E2DED4; --ok:#2E7D5B; --warn:#B4532A;
+    --font:'Poppins', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:15px;-webkit-text-size-adjust:100%}
+  header{background:var(--navy);color:#fff;padding:14px 16px calc(14px);position:sticky;top:0;z-index:5;padding-top:max(14px, env(safe-area-inset-top))}
+  header .brand{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  header h1{margin:2px 0 0;font-size:18px;font-weight:600;line-height:1.25}
+  header .sub{font-size:12px;opacity:.8;margin-top:2px}
+  main{max-width:720px;margin:0 auto;padding:16px 16px 110px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .card h2{font-size:15px;margin:0 0 10px;color:var(--navy)}
+  .muted{color:var(--steel);font-size:13px}
+  .notice{border-left:4px solid var(--gold);background:#FBF7EE;padding:10px 12px;border-radius:8px;font-size:13px;color:var(--ink)}
+  label{display:block;font-size:12px;font-weight:600;color:var(--steel);margin:12px 0 4px}
+  .field{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  textarea.field{min-height:96px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn{font:inherit;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:10px;padding:12px 16px;cursor:pointer}
+  .btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .btn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+  .btn.danger{color:var(--warn)}
+  .btn.block{width:100%}
+  .btn:disabled{opacity:.5}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .entry{border-top:1px solid var(--line);padding:12px 0}
+  .entry:first-child{border-top:0;padding-top:0}
+  .entry b{display:block;font-size:14px}
+  .entry small{color:var(--steel);display:block;margin-top:2px}
+  .entry p{margin:6px 0 0;font-size:14px;white-space:pre-wrap}
+  .tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle}
+  .tag.pend{background:#FBF1DD;color:#8A6416}
+  .tag.sent{background:#E3F1EA;color:var(--ok)}
+  .thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .thumbs img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px max(10px, env(safe-area-inset-bottom));display:flex;gap:10px;z-index:5}
+  .bar .btn{flex:1}
+  .hidden{display:none !important}
+  #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center;z-index:9}
+  #toast.show{opacity:1}
+  .pick{display:flex;gap:8px;align-items:center}
+  .pick .field{flex:1}
+  .dlg{position:fixed;inset:0;background:rgba(10,34,57,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+  .dlg .card{max-width:420px;width:100%;margin:0}
+  .dlg p{margin:0 0 4px;font-size:14px;line-height:1.45}
+    button,a,select,label{touch-action:manipulation;-webkit-tap-highlight-color:rgba(200,155,60,.25)}
+</style>
+</head>
+<body>
+<div id="avisoVistaPrevia" style="position:sticky;top:0;z-index:9999;background:#C89B3C;color:#0A2239;padding:14px 16px;font:600 15px/1.45 -apple-system,system-ui,sans-serif;border-bottom:3px solid #0A2239">Esto es solo una vista previa: los botones no funcionan aquí. En el iPhone y el iPad, la app de Archivos muestra la página pero no la ejecuta. Para trabajar, abra el libro en Safari o Chrome con este enlace: <a href="https://javier-jjc.github.io/libro-obra/" style="color:#0A2239;text-decoration:underline">abrir el Libro de Obra</a>.</div>
+<script>document.getElementById("avisoVistaPrevia").remove();</script>
+<header>
+  <div class="brand">Crearquitectura · Libro de obra</div>
+  <h1 id="hTitle">Registro diario de campo</h1>
+  <div class="sub" id="hSub">Cargue el paquete de obra que le envió la oficina</div>
+</header>
+
+<main>
+  <!-- 1. Sin paquete -->
+  <section id="vSetup" class="hidden">
+    <div class="card">
+      <h2>Empezar</h2>
+      <p class="muted">La oficina le envía un archivo <b>Paquete_campo_….json</b> por WhatsApp o correo. Guárdelo en el celular y ábralo aquí.</p>
+      <label for="packFile">Paquete de obra</label>
+      <input class="field" type="file" id="packFile" accept="application/json,.json">
+      <div class="notice" style="margin-top:14px">Este libro solo registra el avance del día. No contiene precios, montos ni datos del contrato.</div>
+    </div>
+  </section>
+
+  <!-- 2. Registro -->
+  <section id="vMain" class="hidden">
+    <div class="card" id="cWho">
+      <h2>¿Quién reporta?</h2>
+      <label for="author">Su nombre</label>
+      <input class="field" id="author" autocomplete="name" placeholder="Ej.: Maestro Juan Pérez">
+    </div>
+
+    <div class="card">
+      <h2 id="fTitle">Nuevo registro</h2>
+      <div class="row">
+        <div><label for="fDate">Fecha</label><input class="field" type="date" id="fDate"></div>
+        <div><label for="fWeather">Clima</label><select class="field" id="fWeather"></select></div>
+      </div>
+      <label for="fFind">Rubro</label>
+      <input class="field" id="fFind" type="search" placeholder="Buscar rubro por nombre o código" style="margin-bottom:6px">
+      <select class="field" id="fItem"></select>
+      <div class="row">
+        <div><label for="fQty">Cantidad avanzada <span id="fUnit"></span></label><input class="field" type="number" inputmode="decimal" step="any" min="0" id="fQty"></div>
+        <div><label for="fCrew">Personal en obra</label><input class="field" type="number" inputmode="numeric" min="0" step="1" id="fCrew"></div>
+      </div>
+      <label for="fNote">Qué se hizo hoy</label>
+      <textarea class="field" id="fNote" placeholder="Actividad, ubicación, novedades, materiales que faltan, instrucciones recibidas"></textarea>
+      <label for="fPhotos">Fotos</label>
+      <input class="field" type="file" id="fPhotos" accept="image/*" multiple>
+      <div class="thumbs" id="fThumbs"></div>
+      <div class="actions">
+        <button class="btn primary" id="bSave">Guardar registro</button>
+        <button class="btn hidden" id="bCancel">Cancelar edición</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Registros</h2>
+      <div id="list"></div>
+    </div>
+
+    <div class="card">
+      <h2>Obra</h2>
+      <p class="muted" id="packInfo"></p>
+      <div class="actions"><button class="btn" id="bNewPack">Cargar otro paquete</button></div>
+      <input type="file" id="packFile2" accept="application/json,.json" hidden>
+    </div>
+  </section>
+</main>
+
+<div class="bar hidden" id="bar">
+  <button class="btn gold" id="bSend">Enviar a la oficina</button>
+</div>
+<div class="dlg hidden" id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgMsg"><div class="card"><p id="dlgMsg"></p><div class="actions"><button class="btn primary" id="dlgOk">Sí</button><button class="btn" id="dlgNo">No</button></div></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+  const STORE = 'crearquitectura_campo_v1';
+  const PHOTO_DB = 'crearquitectura_campo_fotos_v1';
+  const WEATHER = ['Soleado','Nublado','Lluvia ligera','Lluvia fuerte','—'];
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const uid = p => (p||'') + Math.random().toString(36).slice(2,8).toUpperCase() + Date.now().toString(36).slice(-3).toUpperCase();
+  const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+  const num = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
+  const fmtDate = d => { if (!d) return ''; const [y,m,x] = d.split('-'); return `${x}/${m}/${y}`; };
+  // confirm() no funciona en la versión publicada en Claude: se usa un diálogo propio
+  function ask(msg, ok, no){
+    return new Promise(res => {
+      $('#dlgMsg').textContent = msg; $('#dlgOk').textContent = ok || 'Sí'; $('#dlgNo').textContent = no || 'No';
+      const done = v => { $('#dlg').classList.add('hidden'); $('#dlgOk').onclick = $('#dlgNo').onclick = null; res(v); };
+      $('#dlgOk').onclick = () => done(true); $('#dlgNo').onclick = () => done(false);
+      $('#dlg').classList.remove('hidden'); $('#dlgOk').focus();
+    });
+  }
+  // en la nube (Claude) la descarga pasa por la capacidad downloads; fuera de ella, enlace normal
+  let dl = null;
+  if (window.claude && typeof window.claude.use === 'function') window.claude.use('downloads').then(d => { dl = d; }).catch(() => {});
+  function toast(msg){ const el = $('#toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2800); }
+
+  // ---------- estado ----------
+  let st = {pack: null, author: '', entries: []};
+  try { const raw = localStorage.getItem(STORE); if (raw) st = Object.assign(st, JSON.parse(raw)); } catch (_) {}
+  const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(st)); } catch (e) { toast('No se pudo guardar en este navegador.'); } };
+  let editing = null, pendingFiles = [];
+
+  // ---------- fotos en IndexedDB ----------
+  let dbP = null;
+  function photoDb(){
+    if (!dbP) dbP = new Promise((res, rej) => { try { const r = indexedDB.open(PHOTO_DB, 1); r.onupgradeneeded = () => r.result.createObjectStore('photos', {keyPath: 'id'}); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } });
+    return dbP;
+  }
+  async function tx(mode, fn){ const db = await photoDb(); return new Promise((res, rej) => { const t = db.transaction('photos', mode), s = t.objectStore('photos'); let out; const r = fn(s); if (r && 'onsuccess' in r) r.onsuccess = () => { out = r.result; }; t.oncomplete = () => res(out); t.onerror = () => rej(t.error); }); }
+  const photoPut = rec => tx('readwrite', s => s.put(rec));
+  const photoGet = id => tx('readonly', s => s.get(id));
+  const photoDel = ids => tx('readwrite', s => { ids.forEach(id => s.delete(id)); });
+
+  function loadImage(file){ return new Promise((res, rej) => { const url = URL.createObjectURL(file), img = new Image(); img.onload = () => res({img, url}); img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); }; img.src = url; }); }
+  function drawScaled(img, max){ const W = img.naturalWidth, H = img.naturalHeight, k = Math.min(1, max / Math.max(W, H)), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(W*k)); c.height = Math.max(1, Math.round(H*k)); const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(img, 0, 0, c.width, c.height); return c; }
+  async function compress(file){ const {img, url} = await loadImage(file); try { const c = drawScaled(img, 1600); return {data: c.toDataURL('image/jpeg', .74), thumb: drawScaled(img, 240).toDataURL('image/jpeg', .7), w: c.width, h: c.height}; } finally { URL.revokeObjectURL(url); } }
+
+  // ---------- paquete ----------
+  async function loadPack(file){
+    let p; try { p = JSON.parse(await file.text()); } catch (_) { toast('Ese archivo no es un paquete de obra.'); return; }
+    if (!p || p.app !== 'Crearquitectura · Paquete de campo' || !p.project || !Array.isArray(p.items)){ toast('Ese archivo no es un paquete de obra de Crearquitectura.'); return; }
+    if (st.pack && st.pack.project.id !== p.project.id && st.entries.some(e => !e.sent && e.projectId === st.pack.project.id)){
+      if (!(await ask('Hay registros sin enviar de la obra anterior. Se conservan y podrá enviarlos al volver a cargar ese paquete. ¿Continuar?', 'Continuar', 'Cancelar'))) return;
+    }
+    // Solo se guarda lo que el campo necesita, aunque el archivo traiga más.
+    st.pack = {project: {id: p.project.id, code: p.project.code || '', name: p.project.name || '', location: p.project.location || ''},
+               items: p.items.map(i => ({id: i.id, code: i.code || '', rubro: i.rubro || '', unit: i.unit || ''})), loadedAt: new Date().toISOString()};
+    persist(); render(); toast('Obra cargada: ' + st.pack.project.name);
+  }
+
+  // ---------- formulario ----------
+  function fillItems(filter){
+    const f = (filter || '').toLowerCase(), sel = $('#fItem'), cur = sel.value;
+    const items = (st.pack?.items || []).filter(i => !f || (i.code + ' ' + i.rubro).toLowerCase().includes(f));
+    sel.innerHTML = `<option value="">— Registro general (sin rubro) —</option>` + items.map(i => `<option value="${esc(i.id)}">${esc((i.code ? i.code + ' · ' : '') + i.rubro)}</option>`).join('');
+    if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+    updUnit();
+  }
+  function updUnit(){ const i = (st.pack?.items || []).find(x => x.id === $('#fItem').value); $('#fUnit').textContent = i && i.unit ? '(' + i.unit + ')' : ''; }
+  function resetForm(){
+    editing = null; pendingFiles = [];
+    $('#fDate').value = todayISO(); $('#fWeather').value = 'Soleado'; $('#fFind').value = ''; fillItems('');
+    $('#fItem').value = ''; $('#fQty').value = ''; $('#fCrew').value = ''; $('#fNote').value = ''; $('#fPhotos').value = ''; $('#fThumbs').innerHTML = '';
+    $('#fTitle').textContent = 'Nuevo registro'; $('#bCancel').classList.add('hidden'); updUnit();
+  }
+  async function editEntry(id){
+    const e = st.entries.find(x => x.id === id); if (!e || e.sent) return;
+    editing = e; pendingFiles = [];
+    $('#fDate').value = e.date; $('#fWeather').value = e.weather; $('#fFind').value = ''; fillItems(''); $('#fItem').value = e.itemId || '';
+    $('#fQty').value = e.qty || ''; $('#fCrew').value = e.crew || ''; $('#fNote').value = e.note || ''; $('#fPhotos').value = '';
+    $('#fThumbs').innerHTML = (await thumbsHtml(e)); $('#fTitle').textContent = 'Editar registro'; $('#bCancel').classList.remove('hidden'); updUnit();
+    window.scrollTo({top: $('#fTitle').offsetTop - 80, behavior: 'smooth'});
+  }
+  async function saveEntry(){
+    if (!st.author.trim()){ toast('Escriba su nombre arriba.'); $('#author').focus(); return; }
+    const data = {date: $('#fDate').value || todayISO(), itemId: $('#fItem').value, qty: num($('#fQty').value), crew: Math.round(num($('#fCrew').value)),
+                  weather: $('#fWeather').value, note: $('#fNote').value.trim(), owner: st.author.trim()};
+    const files = [...$('#fPhotos').files];
+    if (!data.itemId && !data.note && !files.length && !(editing && editing.photos.length)){ toast('Elija un rubro, escriba qué se hizo o agregue fotos.'); return; }
+    const btn = $('#bSave'); btn.disabled = true;
+    let e = editing;
+    if (!e){ e = Object.assign({id: uid('C-'), projectId: st.pack.project.id, photos: [], sent: false, createdAt: new Date().toISOString()}, data); st.entries.push(e); }
+    else Object.assign(e, data);
+    let fail = 0;
+    for (const [k, f] of files.entries()){
+      btn.textContent = `Procesando foto ${k+1} de ${files.length}…`;
+      try { const c = await compress(f), id = uid('CF-'); await photoPut({id, entryId: e.id, data: c.data, thumb: c.thumb, w: c.w, h: c.h, name: f.name}); e.photos.push({id, name: f.name}); }
+      catch (_) { fail++; }
+    }
+    persist(); btn.disabled = false; btn.textContent = 'Guardar registro';
+    resetForm(); render();
+    toast(fail ? `Guardado. ${fail} foto(s) no se pudieron leer.` : 'Registro guardado. Recuerde enviarlo a la oficina.');
+  }
+  async function delEntry(id){
+    const e = st.entries.find(x => x.id === id); if (!e || e.sent) return;
+    if (!(await ask('¿Eliminar este registro y sus fotos?', 'Eliminar', 'Cancelar'))) return;
+    await photoDel(e.photos.map(p => p.id)).catch(() => {});
+    st.entries = st.entries.filter(x => x.id !== id); persist(); if (editing && editing.id === id) resetForm(); render();
+  }
+
+  // ---------- envío ----------
+  async function send(){
+    const pend = st.entries.filter(e => !e.sent && e.projectId === st.pack.project.id);
+    if (!pend.length){ toast('No hay registros pendientes de envío.'); return; }
+    const btn = $('#bSend'); btn.disabled = true; btn.textContent = 'Preparando…';
+    try {
+      const entries = [];
+      for (const e of pend){
+        const photos = [];
+        for (const ph of e.photos){ const r = await photoGet(ph.id).catch(() => null); if (r) photos.push({id: ph.id, name: r.name, w: r.w, h: r.h, data: r.data}); }
+        entries.push({id: e.id, date: e.date, itemId: e.itemId, qty: e.qty, crew: e.crew, weather: e.weather, note: e.note, owner: e.owner, createdAt: e.createdAt, photos});
+      }
+      const payload = {app: 'Crearquitectura · Libro de obra campo', version: 1, projectId: st.pack.project.id, projectCode: st.pack.project.code,
+                       author: st.author, sentAt: new Date().toISOString(), entries};
+      const name = `Libro_campo_${(st.pack.project.code || st.pack.project.name).replace(/[^\w-]+/g, '_').slice(0, 40)}_${todayISO()}_${st.author.split(' ')[0] || 'campo'}.json`;
+      const file = new File([JSON.stringify(payload)], name, {type: 'application/json'});
+      let shared = false;
+      if (navigator.canShare && navigator.canShare({files: [file]})){
+        try { await navigator.share({files: [file], title: 'Libro de obra', text: `Registro de obra ${st.pack.project.name} · ${fmtDate(todayISO())}`}); shared = true; }
+        catch (err) { if (err && err.name === 'AbortError'){ toast('Envío cancelado.'); return; } }
+      }
+      if (!shared && dl){
+        try { await dl.save({filename: name, data: file}); }
+        catch (err) { toast('No se guardó el archivo.'); return; }
+      } else if (!shared){ const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+      if (await ask(shared ? '¿Se envió el archivo a la oficina?' : 'El archivo quedó guardado en el celular (carpeta Descargas o Archivos). Envíelo a la oficina por WhatsApp o correo. ¿Ya lo envió?', 'Sí, ya lo envié', 'Todavía no')){
+        const at = new Date().toISOString(); pend.forEach(e => { e.sent = true; e.sentAt = at; }); persist(); render();
+        toast(`${pend.length} registro(s) marcados como enviados.`);
+      }
+    } finally { btn.disabled = false; btn.textContent = 'Enviar a la oficina'; }
+  }
+
+  // ---------- vista ----------
+  async function thumbsHtml(e){
+    let h = '';
+    for (const ph of e.photos){ const r = await photoGet(ph.id).catch(() => null); if (r) h += `<img src="${r.thumb}" alt="Foto del registro">`; }
+    return h;
+  }
+  async function render(){
+    const has = !!st.pack;
+    $('#vSetup').classList.toggle('hidden', has); $('#vMain').classList.toggle('hidden', !has); $('#bar').classList.toggle('hidden', !has);
+    if (!has){ $('#hTitle').textContent = 'Registro diario de campo'; $('#hSub').textContent = 'Cargue el paquete de obra que le envió la oficina'; return; }
+    const P = st.pack.project;
+    $('#hTitle').textContent = P.name; $('#hSub').textContent = [P.code, P.location].filter(Boolean).join(' · ') || 'Libro de obra';
+    $('#author').value = st.author;
+    $('#packInfo').textContent = `${P.code ? P.code + ' · ' : ''}${P.name}. ${st.pack.items.length} rubros. Paquete cargado el ${fmtDate(st.pack.loadedAt.slice(0,10))}.`;
+    const byId = new Map(st.pack.items.map(i => [i.id, i]));
+    const mine = st.entries.filter(e => e.projectId === P.id).sort((a, b) => (b.date + b.createdAt).localeCompare(a.date + a.createdAt));
+    const nPend = mine.filter(e => !e.sent).length;
+    $('#bSend').textContent = nPend ? `Enviar a la oficina (${nPend})` : 'Enviar a la oficina';
+    if (!mine.length){ $('#list').innerHTML = '<p class="muted">Aún no hay registros.</p>'; return; }
+    let h = '';
+    for (const e of mine.slice(0, 60)){
+      const i = byId.get(e.itemId);
+      h += `<div class="entry"><b>${esc(i ? (i.code ? i.code + ' · ' : '') + i.rubro : 'Registro general')}<span class="tag ${e.sent ? 'sent' : 'pend'}">${e.sent ? 'Enviado' : 'Pendiente'}</span></b>
+        <small>${esc([fmtDate(e.date), e.qty ? e.qty + ' ' + (i?.unit || '') : '', e.crew ? e.crew + ' personas' : '', e.weather !== '—' ? e.weather : '', e.owner].filter(Boolean).join(' · '))}</small>
+        ${e.note ? `<p>${esc(e.note)}</p>` : ''}<div class="thumbs">${await thumbsHtml(e)}</div>
+        ${e.sent ? '' : `<div class="actions"><button class="btn" data-edit="${esc(e.id)}">Editar</button><button class="btn danger" data-del="${esc(e.id)}">Eliminar</button></div>`}</div>`;
+    }
+    $('#list').innerHTML = h;
+  }
+
+  // ---------- eventos ----------
+  $('#fWeather').innerHTML = WEATHER.map(w => `<option>${w}</option>`).join('');
+  $('#packFile').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadPack(f); e.target.value = ''; });
+  $('#packFile2').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadPack(f); e.target.value = ''; });
+  $('#bNewPack').addEventListener('click', () => $('#packFile2').click());
+  $('#author').addEventListener('input', e => { st.author = e.target.value; persist(); });
+  $('#fFind').addEventListener('input', e => fillItems(e.target.value));
+  $('#fItem').addEventListener('change', updUnit);
+  $('#fPhotos').addEventListener('change', async e => { const fs = [...e.target.files]; $('#fThumbs').innerHTML = (editing ? await thumbsHtml(editing) : '') + fs.map(f => `<img src="${URL.createObjectURL(f)}" alt="Foto nueva">`).join(''); });
+  $('#bSave').addEventListener('click', saveEntry);
+  $('#bCancel').addEventListener('click', resetForm);
+  $('#bSend').addEventListener('click', send);
+  $('#list').addEventListener('click', e => { const ed = e.target.closest('[data-edit]'), dl = e.target.closest('[data-del]'); if (ed) editEntry(ed.dataset.edit); if (dl) delEntry(dl.dataset.del); });
+  resetForm(); render();
+})();
+</script>
+</body>
+</html>
